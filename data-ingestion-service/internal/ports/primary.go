@@ -5,6 +5,6 @@ import (
 )
 
 type APIPort interface {
-	CreateJobPostings(postings []jp.JobPosting) error
-	StreamJobPostings(params jp.SearchFilterParams) (*[]jp.JobPosting, error)
+	CreateJobPostings(*[]jp.JobPosting) error
+	StreamJobPostings(jp.SearchFilterParams, int, int) ([]jp.JobPosting, error)
 }
