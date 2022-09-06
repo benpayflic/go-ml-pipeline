@@ -1,8 +1,6 @@
 package api
 
 import (
-	"fmt"
-
 	jp "github.com/benpayflic/go-ml-pipelined/data-ingestion-service/internal/application/domain/job_posting"
 )
 
@@ -13,12 +11,12 @@ type generator func() <-chan jp.JobPosting
 type consumer func(chan pipelineErr, <-chan jp.JobPosting)
 
 // Push raw job postings into the pipeline
-func jobPostingGenerator(postings []jp.JobPosting) generator {
+func jobPostingGenerator(postings *[]jp.JobPosting) generator {
 	return func() <-chan jp.JobPosting {
 		out := make(chan jp.JobPosting)
 		go func() {
 			defer close(out)
-			for _, p := range postings {
+			for _, p := range *postings {
 				out <- p
 			}
 		}()
@@ -27,18 +25,21 @@ func jobPostingGenerator(postings []jp.JobPosting) generator {
 }
 
 // Push processed job postings to database
-func jobPostingConsumer() consumer {
+func jobPostingConsumer(api Application) consumer {
 	return func(errC chan pipelineErr, in <-chan jp.JobPosting) {
+		batch := make([]jp.JobPosting, 0)
 		for {
 			p, ok := <-in
 			if ok {
-				fmt.Println(p.Location)
-				// TODO: Push to DB
-
+				batch = append(batch, p)
 			} else {
-				// processed all data
+				err := api.db.CreateJobPostings(batch)
+				if err != nil {
+					errC <- pipelineErr{err: err}
+					break
+				}
 				errC <- pipelineErr{err: nil} //signal no error occurred
-				return
+				break
 			}
 		}
 	}

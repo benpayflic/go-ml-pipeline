@@ -34,11 +34,10 @@ func (r *JobPosting) Marshal() ([]byte, error) {
 }
 
 type SearchFilterParams struct {
-	JobID      string `json:"job_id,omitempty"`
-	Title      string `json:"title,omitempty"`
-	Industry   string `json:"industry,omitempty"`
-	Location   string `json:"location,omitempty"`
-	Fraudulent bool   `json:"fraudulent,omitempty"`
+	Title      string `json:"title"`
+	Industry   string `json:"industry"`
+	Location   string `json:"location"`
+	Fraudulent bool   `json:"fraudulent"`
 }
 
 func UnmarshalSearchFilterParams(data []byte) (SearchFilterParams, error) {
