@@ -1,0 +1,1 @@
+protoc -I proto --go_opt=module=github.com/benpayflic/go-ml-pipeline/data-ingestion-service --go_out=. --go-grpc_opt=module=github.com/benpayflic/go-ml-pipeline/data-ingestion-service --go-grpc_out=. ./proto/*.proto

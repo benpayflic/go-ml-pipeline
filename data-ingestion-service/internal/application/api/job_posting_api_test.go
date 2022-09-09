@@ -4,11 +4,12 @@ import (
 	"errors"
 	"log"
 	"testing"
+	"time"
 
-	rightDB "github.com/benpayflic/go-ml-pipelined/data-ingestion-service/internal/adapters/framework/secondary/database"
-	c "github.com/benpayflic/go-ml-pipelined/data-ingestion-service/pkg/config"
+	rightDB "github.com/benpayflic/go-ml-pipeline/data-ingestion-service/internal/adapters/framework/secondary/database"
+	c "github.com/benpayflic/go-ml-pipeline/data-ingestion-service/pkg/config"
 
-	jp "github.com/benpayflic/go-ml-pipelined/data-ingestion-service/internal/application/domain/job_posting"
+	jp "github.com/benpayflic/go-ml-pipeline/data-ingestion-service/internal/application/domain/job_posting"
 )
 
 func TestCreateJobPostings(t *testing.T) {
@@ -132,13 +133,33 @@ func TestStreamJobPostings(t *testing.T) {
 			Industry:           "industry",
 			Function:           "function",
 			Fraudulent:         false,
+		}, {
+			JobID:              3,
+			Title:              "Go Engineer (TEST - DELETE ME)",
+			Location:           "",
+			Department:         "",
+			SalaryRange:        "",
+			CompanyProfile:     "",
+			Description:        "",
+			Requirements:       "",
+			Benefits:           "",
+			Telecommuting:      true,
+			HasCompanyLogo:     false,
+			HasQuestions:       true,
+			EmployeeType:       "",
+			RequiredExperience: "",
+			RequiredEducation:  "",
+			Industry:           "industry",
+			Function:           "function",
+			Fraudulent:         false,
 		},
 	}
 	api.CreateJobPostings(&jobPostings)
 
 	// Search for new job posting
 	params := jp.SearchFilterParams{
-		Title: "Senior Python Engineer (TEST - DELETE ME)",
+		CreatedBefore: time.Now().Add(24 * time.Hour),
+		CreatedAfter:  time.Now().Add(-24 * time.Hour),
 	}
 
 	postings, err := api.StreamJobPostings(params, 1, 1)
@@ -148,7 +169,7 @@ func TestStreamJobPostings(t *testing.T) {
 	}
 
 	if len(postings) == 0 {
-		t.Error(errors.New("no job posting found with title " + params.Title))
+		t.Error(errors.New("no job posting found with provided params"))
 	}
 
 	// Clean up test DB entries.

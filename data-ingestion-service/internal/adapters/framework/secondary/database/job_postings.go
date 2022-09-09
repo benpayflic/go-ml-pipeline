@@ -2,8 +2,9 @@ package database
 
 import (
 	"context"
+	"time"
 
-	jp "github.com/benpayflic/go-ml-pipelined/data-ingestion-service/internal/application/domain/job_posting"
+	jp "github.com/benpayflic/go-ml-pipeline/data-ingestion-service/internal/application/domain/job_posting"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -11,6 +12,7 @@ import (
 func (dba *Adapter) CreateJobPostings(postings []jp.JobPosting) error {
 	postingsMongo := make([]interface{}, 0)
 	for _, v := range postings {
+		v.CreatedAt = time.Now().UTC().Unix()
 		postingsMongo = append(postingsMongo, v)
 	}
 	_, err := dba.collection.InsertMany(context.Background(), postingsMongo)
@@ -22,18 +24,24 @@ func (dba *Adapter) CreateJobPostings(postings []jp.JobPosting) error {
 
 func (dba *Adapter) RetrieveJobPostings(params jp.SearchFilterParams, page int, limit int) ([]jp.JobPosting, error) {
 
-	query := bson.M{
-		"fraudulent": params.Fraudulent,
+	var query bson.M
+	queryAnd := []bson.M{}
+	dateProvided := false
+
+	if !params.CreatedBefore.IsZero() {
+		dateProvided = true
+		queryAnd = append(queryAnd, bson.M{"created_at": bson.M{"$lt": params.CreatedBefore.UTC().Unix()}})
 	}
 
-	if params.Title != "" {
-		query["title"] = params.Title
+	if !params.CreatedAfter.IsZero() {
+		dateProvided = true
+		queryAnd = append(queryAnd, bson.M{"created_at": bson.M{"$gt": params.CreatedAfter.UTC().Unix()}})
 	}
-	if params.Industry != "" {
-		query["industry"] = params.Industry
-	}
-	if params.Location != "" {
-		query["location"] = params.Location
+
+	if !dateProvided {
+		query = bson.M{}
+	} else {
+		query = bson.M{"$and": queryAnd}
 	}
 
 	opts := new(options.FindOptions)
@@ -65,7 +73,7 @@ func (dba *Adapter) DeleteJobPostings(postings []jp.JobPosting) error {
 	query := []bson.M{}
 	for _, posting := range postings {
 		query = append(query, bson.M{
-			"jobid": posting.JobID, "title": posting.Title,
+			"job_id": posting.JobID, "title": posting.Title,
 		})
 	}
 

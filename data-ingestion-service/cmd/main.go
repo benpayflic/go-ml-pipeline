@@ -2,12 +2,16 @@ package main
 
 import (
 	"log"
+	"sync"
 
-	rightDB "github.com/benpayflic/go-ml-pipelined/data-ingestion-service/internal/adapters/framework/secondary/database"
-	"github.com/benpayflic/go-ml-pipelined/data-ingestion-service/internal/application/api"
-	jp "github.com/benpayflic/go-ml-pipelined/data-ingestion-service/internal/application/domain/job_posting"
-	c "github.com/benpayflic/go-ml-pipelined/data-ingestion-service/pkg/config"
+	leftAMQP "github.com/benpayflic/go-ml-pipeline/data-ingestion-service/internal/adapters/framework/primary/amqp"
+	leftGRPC "github.com/benpayflic/go-ml-pipeline/data-ingestion-service/internal/adapters/framework/primary/grpc"
+	rightDB "github.com/benpayflic/go-ml-pipeline/data-ingestion-service/internal/adapters/framework/secondary/database"
+	"github.com/benpayflic/go-ml-pipeline/data-ingestion-service/internal/application/api"
+	c "github.com/benpayflic/go-ml-pipeline/data-ingestion-service/pkg/config"
 )
+
+var wg sync.WaitGroup
 
 func main() {
 	// config, err := c.LoadConfig("./pkg/config/")
@@ -23,50 +27,18 @@ func main() {
 	dbDrivenAdapter.Connect()
 	api := api.NewApplication(dbDrivenAdapter, config)
 
-	jobPostings := []jp.JobPosting{
-		{
-			JobID:              1,
-			Title:              "Senior Go Engineer",
-			Location:           "",
-			Department:         "",
-			SalaryRange:        "",
-			CompanyProfile:     "",
-			Description:        "",
-			Requirements:       "",
-			Benefits:           "",
-			Telecommuting:      true,
-			HasCompanyLogo:     false,
-			HasQuestions:       true,
-			EmployeeType:       "",
-			RequiredExperience: "",
-			RequiredEducation:  "",
-			Industry:           "industry",
-			Function:           "function",
-			Fraudulent:         false,
-		}, {
-			JobID:              2,
-			Title:              "Senior Python Engineer",
-			Location:           "",
-			Department:         "",
-			SalaryRange:        "",
-			CompanyProfile:     "",
-			Description:        "",
-			Requirements:       "",
-			Benefits:           "",
-			Telecommuting:      true,
-			HasCompanyLogo:     false,
-			HasQuestions:       true,
-			EmployeeType:       "",
-			RequiredExperience: "",
-			RequiredEducation:  "",
-			Industry:           "industry",
-			Function:           "function",
-			Fraudulent:         false,
-		},
-	}
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		grpcAdapter := leftGRPC.NewAdapter(api, &config)
+		grpcAdapter.Start()
+	}()
 
-	err = api.CreateJobPostings(&jobPostings)
-	if err != nil {
-		log.Fatal(err)
-	}
+	go func() {
+		defer wg.Done()
+		amqpAdapter := leftAMQP.NewAdapter(api, &config)
+		amqpAdapter.Consume()
+	}()
+
+	wg.Wait()
 }
