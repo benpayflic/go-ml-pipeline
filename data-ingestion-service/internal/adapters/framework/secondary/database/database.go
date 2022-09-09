@@ -1,7 +1,7 @@
 package database
 
 import (
-	"github.com/benpayflic/go-ml-pipelined/data-ingestion-service/pkg/config"
+	"github.com/benpayflic/go-ml-pipeline/data-ingestion-service/pkg/config"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 

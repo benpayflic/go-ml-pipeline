@@ -1,7 +1,7 @@
 package ports
 
 import (
-	jp "github.com/benpayflic/go-ml-pipelined/data-ingestion-service/internal/application/domain/job_posting"
+	jp "github.com/benpayflic/go-ml-pipeline/data-ingestion-service/internal/application/domain/job_posting"
 )
 
 type APIPort interface {

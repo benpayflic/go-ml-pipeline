@@ -1,8 +1,8 @@
 package api
 
 import (
-	"github.com/benpayflic/go-ml-pipelined/data-ingestion-service/internal/ports"
-	"github.com/benpayflic/go-ml-pipelined/data-ingestion-service/pkg/config"
+	"github.com/benpayflic/go-ml-pipeline/data-ingestion-service/internal/ports"
+	"github.com/benpayflic/go-ml-pipeline/data-ingestion-service/pkg/config"
 )
 
 // Application implements the APIPort interface

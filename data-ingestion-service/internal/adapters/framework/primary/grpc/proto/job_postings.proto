@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package job_postings;
+
+option go_package = "github.com/benpayflic/go-ml-pipeline/data-ingestion-service/proto";
+
+import "google/protobuf/timestamp.proto";
+
+//Requests
+
+message JobPosting {
+    int32 job_id = 1;
+    string title = 2;              
+	string location = 3;           
+	string department = 4;         
+	string salary_range = 5;      
+	string company_profile = 6;     
+	string description = 7;        
+	string requirements = 8;       
+	string benefits = 9;        
+	bool telecommuting = 10;   
+	bool has_company_logo = 11;   
+	bool has_questions = 12;  
+	string employee_type = 13;       
+	string required_experience = 14;
+	string required_education =15;
+	string industry =16;   
+	string function =17;     
+	bool fraudulent =18;        
+
+}
+message CreateJobPostingsRequest {
+    JobPosting job_posting = 1;
+}
+
+message StreamJobPostingsRequest {
+    optional google.protobuf.Timestamp created_before = 1;
+    optional google.protobuf.Timestamp created_after = 2;
+}
+
+// Responses
+
+message CreateJobPostingsResponse {
+    string message = 1;
+}
+
+
+service JobPostings {
+    rpc CreateJobPostings (stream CreateJobPostingsRequest) returns (CreateJobPostingsResponse);
+    rpc StreamJobPostings (StreamJobPostingsRequest) returns (stream JobPosting);
+}
